@@ -1,3 +1,4 @@
+"use client";
 import { GameDomain } from "@/entities/game";
 
 export function GameField({
@@ -9,13 +10,13 @@ export function GameField({
 }) {
   return (
     <div className="grid grid-cols-3">
-      {game.field.map((symbol, index) => (
+      {game.field.map((sybmol, index) => (
         <button
-          onClick={() => (onCellClick ? index : "")}
+          onClick={() => onCellClick?.(index)}
           key={index}
           className="border border-primary w-10 h-10 flex justify-center items-center"
         >
-          {symbol ?? ""}
+          {sybmol ?? ""}
         </button>
       ))}
     </div>

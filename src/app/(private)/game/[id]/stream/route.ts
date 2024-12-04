@@ -1,3 +1,3 @@
-import { getGameStream } from "@/features/game";
+import { getGameStream } from "@/features/game/server";
 
 export const GET = getGameStream;

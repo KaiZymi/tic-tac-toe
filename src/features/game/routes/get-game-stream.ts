@@ -1,34 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sseStream } from "@/shared/lib/sse/server";
-import { getGameById } from "@/entities/game/server";
+import { gameEvents, getGameById, surrenderGame } from "@/entities/game/server";
 import { GameId } from "@/kernel/ids";
-import { gameEvents } from "@/features/game/services/game-events";
+import { sseStream } from "@/shared/lib/sse/server";
+import { NextRequest } from "next/server";
 
-//опенсоурсинг на сервере
+import { getCurrentUser } from "@/entities/user/server";
+
 export async function getGameStream(
   req: NextRequest,
   { params }: { params: Promise<{ id: GameId }> },
 ) {
   const { id } = await params;
-
+  const user = await getCurrentUser();
   const game = await getGameById(id);
 
-  if (!game) {
+  if (!game || !user) {
     return new Response(`Game not found`, {
       status: 404,
     });
   }
 
-  const { addCloseListener, closeStream, writeStream, response } =
-    sseStream(req);
+  const { addCloseListener, response, write } = sseStream(req);
 
-  writeStream(game);
+  write(game);
 
-  const unwatch = await gameEvents.addListener(game.id, (event) => {
-    writeStream(event.data);
+  const unwatch = await gameEvents.addGameChangedListener(game.id, (event) => {
+    write(event.data);
   });
 
-  addCloseListener(() => {
+  addCloseListener(async () => {
+    await surrenderGame(id, user);
     unwatch();
   });
 

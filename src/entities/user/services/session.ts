@@ -1,14 +1,9 @@
 import "server-only";
 import { SignJWT, jwtVerify } from "jose";
-import {
-  SessionEntity,
-  UserEntity,
-  userToSession,
-} from "@/entities/user/domain";
+import { SessionEntity, UserEntity, userToSession } from "../domain";
 import { left, right } from "@/shared/lib/either";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { routes } from "@/kernel/routes";
 
 const secretKey = process.env.SESSION_SECRET;
 const encodedKey = new TextEncoder().encode(secretKey);
@@ -52,12 +47,13 @@ async function deleteSession() {
   cookieStore.delete("session");
 }
 
-const verifySession = async () => {
-  const cookie = (await cookies()).get("session")?.value;
+const getSessionCookies = () => cookies().then((c) => c.get("session")?.value);
+const verifySession = async (getCookies = getSessionCookies) => {
+  const cookie = await getCookies();
   const session = await decrypt(cookie);
 
   if (session.type === "left") {
-    redirect(routes.signIn());
+    redirect("/sign-in");
   }
 
   return { isAuth: true, session: session.value };

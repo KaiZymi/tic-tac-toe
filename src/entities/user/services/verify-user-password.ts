@@ -1,26 +1,29 @@
-import { userRepository } from "@/entities/user/repositories/user";
-import { passwordService } from "@/entities/user/services/password";
 import { left, right } from "@/shared/lib/either";
+import { userRepository } from "../repositories/user";
+import { passwordService } from "./password";
 
+export async function verifyUserPassword({
+  login,
+  password,
+}: {
+  login: string;
+  password: string;
+}) {
+  const user = await userRepository.getUser({ login });
 
-export async function verifyUserPassword ({password, login}: {login:string, password:string}) {
-
-  const user = await userRepository.getUser({ login })
-
-  if(!user) {
-    return left('wrong-login-or-password' as const)
+  if (!user) {
+    return left("wron-login-or-password" as const);
   }
 
-  const isCompare = await passwordService.comparePassword({
+  const isCompare = await passwordService.comparePasswords({
     hash: user.passwordHash,
     salt: user.salt,
-    password
-  })
+    password,
+  });
 
-  if(!isCompare) {
-    return left('wrong-login-or-password' as const)
+  if (!isCompare) {
+    return left("wron-login-or-password" as const);
   }
 
-  return right(user)
-
+  return right(user);
 }

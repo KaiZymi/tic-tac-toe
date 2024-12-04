@@ -1,8 +1,9 @@
-import { Button } from "@/shared/ui/button";
-import React from "react";
 import { sessionService } from "@/entities/user/server";
-import { redirect } from "next/navigation";
 import { routes } from "@/kernel/routes";
+import { Button } from "@/shared/ui/button";
+import { redirect } from "next/navigation";
+
+import React from "react";
 
 export default async function PrivateLayout({
   children,
@@ -13,14 +14,14 @@ export default async function PrivateLayout({
 
   return (
     <div className="flex flex-col grow">
-      <header className="px-10 py-4 flex flex-row gap-4 justify-between border-b border-b-primary/50 items-center ">
+      <header className="px-10 py-4 flex flex-row gap-4 justify-between border-b border-b-primary/50 items-center">
         <div className="text-xl">Tik-tak-toe-online</div>
-        <div className="flex items-center gap-4">
+        <div className="flex gap-4 items-center">
           <div className="text-lg">{session.login}</div>
           <form
             action={async () => {
               "use server";
-              await sessionService.deleteSession();
+              sessionService.deleteSession();
               redirect(routes.signIn());
             }}
           >
@@ -28,7 +29,6 @@ export default async function PrivateLayout({
           </form>
         </div>
       </header>
-
       {children}
     </div>
   );

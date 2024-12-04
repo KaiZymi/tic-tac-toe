@@ -1,10 +1,11 @@
-import { gameRepository } from "@/entities/game/repositories/game";
-import { PlayerEntity } from "@/entities/game/domain";
-import cuid from "cuid";
 import { left, right } from "@/shared/lib/either";
+import { PlayerEntity } from "../domain";
+import { gameRepository } from "../repositories/game";
+import cuid from "cuid";
+import { gameEvents } from "./game-events";
 
 export async function createGame(player: PlayerEntity) {
-  const playerGames = await gameRepository.gameList({
+  const playerGames = await gameRepository.gamesList({
     players: { some: { id: player.id } },
     status: "idle",
   });
@@ -22,6 +23,10 @@ export async function createGame(player: PlayerEntity) {
     creator: player,
     status: "idle",
     field: Array(9).fill(null),
+  });
+
+  await gameEvents.emit({
+    type: "game-created",
   });
 
   return right(createdGame);

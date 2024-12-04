@@ -1,5 +1,5 @@
 import { SignInForm } from "@/features/auth";
 
-export default function SignUpPage() {
+export default function SignIn() {
   return <SignInForm />;
 }

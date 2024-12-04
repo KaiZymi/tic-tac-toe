@@ -1,3 +1,2 @@
-export type UserId = string
-
-export type GameId = string
+export type UserId = string;
+export type GameId = string;

@@ -1,37 +1,47 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
-import { SignUpForm } from "@/features/auth/containers/sign-up-form";
-import Link from "next/link";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/shared/ui/card";
+
 import React from "react";
-import { AuthFormLink } from "@/features/auth/ui/auth-form-link";
 
-
-export function AuthFormLayout({ title, description, fields, actions, link, action, error }: {
+export function AuthFormLayout({
+  actions,
+  description,
+  fields,
+  link,
+  title,
+  error,
+  action,
+}: {
   title: string;
-  description: string
-  fields: React.ReactNode
-  actions: React.ReactNode
-  link: React.ReactNode
-  error: React.ReactNode
-  action: (form:FormData) => void
+  description: string;
+  fields: React.ReactNode;
+  actions: React.ReactNode;
+  link: React.ReactNode;
+  error: React.ReactNode;
+  action: (formData: FormData) => void;
 }) {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className=" text-2xl font-bold text-center">{title}</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">
+          {title}
+        </CardTitle>
         <CardDescription className="text-center">{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={action}>
-          <div className="grid gap-4">
-            {fields}
-            {actions}
-          </div>
+        <form action={action} className="space-y-4">
+          {fields}
           {error}
+          {actions}
         </form>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        {link}
-      </CardFooter>
+      <CardFooter className="flex justify-center">{link}</CardFooter>
     </Card>
   );
 }

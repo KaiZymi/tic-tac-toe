@@ -1,29 +1,73 @@
+import { prisma } from "@/shared/lib/db";
 import {
   GameEntity,
   GameIdleEntity,
+  GameInProgressEntity,
+  GameOverDrawEntity,
   GameOverEntity,
   PlayerEntity,
-} from "@/entities/game/domain";
-import { prisma } from "@/shared/lib/db";
+} from "../domain";
 import { Game, GamePlayer, Prisma, User } from "@prisma/client";
 import { z } from "zod";
-import { removePassword } from "@/shared/lib/password";
 import { GameId } from "@/kernel/ids";
-
-//Смысл репозиториев, это преобразовать сущности с бд в сущности, которые нужны для работы в проекте
 
 const gameInclude = {
   winner: { include: { user: true } },
   players: { include: { user: true } },
 };
 
-async function gameList(where?: Prisma.GameWhereInput): Promise<GameEntity[]> {
+async function gamesList(where?: Prisma.GameWhereInput): Promise<GameEntity[]> {
   const games = await prisma.game.findMany({
     where,
     include: gameInclude,
   });
 
+  games.map((game) => game.players.map((p) => p.user));
+
   return games.map(dbGameToGameEntity);
+}
+
+async function startGame(gameId: GameId, player: PlayerEntity) {
+  return dbGameToGameEntity(
+    await prisma.game.update({
+      where: { id: gameId },
+      data: {
+        players: {
+          create: {
+            userId: player.id,
+            index: 1,
+          },
+        },
+        status: "inProgress",
+      },
+      include: gameInclude,
+    }),
+  );
+}
+
+async function saveGame(
+  game: GameInProgressEntity | GameOverEntity | GameOverDrawEntity,
+) {
+  const winnerId =
+    game.status === "gameOver"
+      ? await prisma.gamePlayer
+          .findFirstOrThrow({
+            where: { userId: game.winner.id },
+          })
+          .then((p) => p.id)
+      : undefined;
+
+  return dbGameToGameEntity(
+    await prisma.game.update({
+      where: { id: game.id },
+      data: {
+        status: game.status,
+        field: game.field,
+        winnerId: winnerId,
+      },
+      include: gameInclude,
+    }),
+  );
 }
 
 async function getGame(where?: Prisma.GameWhereInput) {
@@ -57,28 +101,8 @@ async function createGame(game: GameIdleEntity): Promise<GameEntity> {
   return dbGameToGameEntity(createdGame);
 }
 
-async function startGame(gameId: GameId, player: PlayerEntity) {
-  const game = await prisma.game.update({
-    where: { id: gameId },
-    data: {
-      players: {
-        create: {
-          index: 1,
-          userId: player.id,
-        },
-      },
-      status: "inProgress",
-    },
-    include: gameInclude,
-  });
-
-  return dbGameToGameEntity(game);
-}
-
-//Парсинг полей
 const fieldSchema = z.array(z.union([z.string(), z.null()]));
 
-//Это хелпер
 function dbGameToGameEntity(
   game: Game & {
     players: Array<GamePlayer & { user: User }>;
@@ -87,13 +111,13 @@ function dbGameToGameEntity(
 ): GameEntity {
   const players = game.players
     .sort((a, b) => a.index - b.index)
-    .map(dbPlayersToPlayer);
+    .map(dbPlayerToPlayer);
 
   switch (game.status) {
     case "idle": {
       const [creator] = players;
       if (!creator) {
-        throw new Error("creator should be in game idle");
+        throw new Error("creator shoud be in game idle");
       }
       return {
         id: game.id,
@@ -103,30 +127,30 @@ function dbGameToGameEntity(
       } satisfies GameIdleEntity;
     }
     case "inProgress":
-    case "gameOverDraw":
+    case "gameOverDraw": {
       return {
         id: game.id,
         players: players,
         status: game.status,
         field: fieldSchema.parse(game.field),
       };
-
+    }
     case "gameOver": {
       if (!game.winner) {
-        throw new Error("winner should be in game over");
+        throw new Error("winner shoud be in game over");
       }
       return {
         id: game.id,
         players: players,
         status: game.status,
         field: fieldSchema.parse(game.field),
-        winner: dbPlayersToPlayer(game.winner),
+        winner: dbPlayerToPlayer(game.winner),
       } satisfies GameOverEntity;
     }
   }
 }
 
-export const dbPlayersToPlayer = (
+export const dbPlayerToPlayer = (
   db: GamePlayer & { user: User },
 ): PlayerEntity => {
   return {
@@ -136,4 +160,10 @@ export const dbPlayersToPlayer = (
   };
 };
 
-export const gameRepository = { gameList, createGame, getGame, startGame };
+export const gameRepository = {
+  gamesList,
+  createGame,
+  getGame,
+  startGame,
+  saveGame,
+};

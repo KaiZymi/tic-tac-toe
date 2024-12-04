@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { SubmitButton } from "@/features/auth/ui/submit-button";
-import { AuthFields } from "@/features/auth/ui/auth-fields";
-import { AuthFormLayout } from "@/features/auth/ui/auth-form-layout";
-import { right } from "@/shared/lib/either";
-import { AuthFormLink } from "@/features/auth/ui/auth-form-link";
-import { ErrorMessage } from "@/features/auth/ui/auth-form-error";
+import { AuthFormLayout } from "../ui/auth-form-layout";
+import { AuthFields } from "../ui/fields";
+import { SubmitButton } from "../ui/submit-button";
+import { BottomLink } from "../ui/link";
+import { ErrorMessage } from "../ui/submit-button copy";
+import { signInAction, SignInFormState } from "../actions/sing-in";
 import { useActionState } from "@/shared/lib/react";
-import { signInAction, SignInFormState } from "@/features/auth/actions/sign-in";
 import { routes } from "@/kernel/routes";
 
 export function SignInForm() {
@@ -20,15 +18,15 @@ export function SignInForm() {
   return (
     <AuthFormLayout
       title="Sign In"
-      description="Welcome back! Please sign in to your account "
+      description="Welcome back! Please sign in to your account"
       action={action}
-      actions={<SubmitButton isPending={isPending}> Sign in </SubmitButton>}
-      error={<ErrorMessage error={formState.errors?._errors} />}
       fields={<AuthFields {...formState} />}
+      actions={<SubmitButton isPending={isPending}> Sign In</SubmitButton>}
+      error={<ErrorMessage error={formState.errors?._errors} />}
       link={
-        <AuthFormLink
+        <BottomLink
           text="Don't have an account?"
-          linkText="Sign Up"
+          linkText="Sign up"
           url={routes.signUp()}
         />
       }

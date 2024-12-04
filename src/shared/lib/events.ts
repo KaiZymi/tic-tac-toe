@@ -1,7 +1,6 @@
 import amqplib, { Connection } from "amqplib";
 
 let connection: Connection | undefined = undefined;
-
 export class EventsChanel {
   constructor(private channelName: string) {}
 
@@ -33,7 +32,7 @@ export class EventsChanel {
     );
   }
 
-  async consume(
+  async concume(
     key: string,
     listener: (data: unknown) => Promise<void> | void,
   ) {
